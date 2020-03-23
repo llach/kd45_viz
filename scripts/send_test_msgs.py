@@ -18,7 +18,7 @@ v = 0
 while not rospy.is_shutdown():
 
     ts = TactileState()
-    ts.header.frame_id = ""
+    ts.header.frame_id = "/base_link"
     ts.header.stamp = rospy.Time.now()
 
     left = ChannelFloat32()

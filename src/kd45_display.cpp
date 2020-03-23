@@ -67,35 +67,44 @@ void KD45Display::updateColorAndAlpha()
 // This is our callback to handle an incoming message.
 void KD45Display::processMessage( const tactile_msgs::TactileState::ConstPtr& msg )
 {
-  // Here we call the rviz::FrameManager to get the transform from the
-  // fixed frame to the frame in the header of this Imu message.  If
-  // it fails, we can't do anything else so we return.
-  Ogre::Quaternion orientation;
-  Ogre::Vector3 position;
-  if( !context_->getFrameManager()->getTransform( msg->header.frame_id,
-                                                  msg->header.stamp,
-                                                  position, orientation ))
-  {
-    ROS_DEBUG( "Error transforming from frame '%s' to frame '%s'",
-               msg->header.frame_id.c_str(), qPrintable( fixed_frame_ ));
-    return;
-  }
+    for (auto& c: msg->sensors) {
 
-  // We are keeping a circular buffer of visual pointers.  This gets
-  // the next one, or creates and stores it if the buffer is not full
-  // todo do this for both visuals
-  std::shared_ptr<KD45Visual> visual;
-    visual.reset(new KD45Visual( context_->getSceneManager(), scene_node_ ));
+        std::shared_ptr<KD45Visual> v = nullptr;
+        std::string sensor_frame = "";
+        if (c.name == "left_gripper_tactile") {
+            std::cout << "left" << std::endl;
+            v = visual_left_;
+            sensor_frame = "kd45_left_finger_link";
+        } else {
+            v = visual_right_;
+            std::cout << "right" << std::endl;
+            sensor_frame = "kd45_right_finger_link";
+        }
 
+        Ogre::Quaternion orientation;
+        Ogre::Vector3 position;
+        if (!context_->getFrameManager()->getTransform(sensor_frame,
+                                                       msg->header.stamp,
+                                                       position, orientation)) {
+            ROS_DEBUG("Error transforming from frame '%s' to frame '%s'",
+                      msg->header.frame_id.c_str(), qPrintable(fixed_frame_));
+            // std::cout << "Error transforming from frame " << sensor_frame << " to frame " << qPrintable(fixed_frame_) << std::endl;
+            return;
+        }
+        std::cout << position << " | " << orientation <<std::endl;
 
-  // Now set or update the contents of the chosen visual.
-  visual->setMessage( msg );
-  visual->setFramePosition( position );
-  visual->setFrameOrientation( orientation );
+        v.reset(new KD45Visual(context_->getSceneManager(), scene_node_));
+        std::cout << v << std::endl;
 
-  float alpha = alpha_property_->getFloat();
-  Ogre::ColourValue color = color_property_->getOgreColor();
-  visual->setColor( color.r, color.g, color.b, alpha );
+        // Now set or update the contents of the chosen visual.
+        v->setMessage(msg);
+        v->setFramePosition(position);
+        v->setFrameOrientation(orientation);
+
+        float alpha = alpha_property_->getFloat();
+        Ogre::ColourValue color = color_property_->getOgreColor();
+        v->setColor(color.r, color.g, color.b, alpha);
+    }
 }
 
 }

@@ -40,15 +40,13 @@ public:
   void setFrameOrientation( const Ogre::Quaternion& orientation );
 
   // Set the color and alpha of the visual, which are user-editable
-  // parameters and therefore don't come from the Imu message.
   void setColor( float r, float g, float b, float a );
 
 private:
   // The object implementing the actual arrow shape
   std::shared_ptr<rviz::Arrow> acceleration_arrow_;
 
-  // A SceneNode whose pose is set to match the coordinate frame of
-  // the Imu message header.
+  // A SceneNode whose pose is set to match the coordinate frame of the forces
   Ogre::SceneNode* frame_node_;
 
   // The SceneManager, kept here only so the destructor can ask it to
