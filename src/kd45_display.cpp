@@ -9,8 +9,6 @@
 #include <rviz/properties/int_property.h>
 #include <rviz/frame_manager.h>
 
-#include "kd45_visual.h"
-
 #include "kd45_display.h"
 
 namespace kd45_viz
@@ -40,6 +38,12 @@ KD45Display::KD45Display()
 void KD45Display::onInitialize()
 {
   MFDClass::onInitialize();
+    right_frame_ =  scene_node_->createChildSceneNode();
+    left_frame_ =  scene_node_->createChildSceneNode();
+
+    right_arrow_.reset(new rviz::Arrow( scene_manager_, right_frame_ ));
+    left_arrow_.reset(new rviz::Arrow( scene_manager_, left_frame_ ));
+    updateColorAndAlpha();
 }
 
 KD45Display::~KD45Display()
@@ -50,8 +54,6 @@ KD45Display::~KD45Display()
 void KD45Display::reset()
 {
   MFDClass::reset();
-    visual_left_.reset();
-    visual_right_.reset();
 }
 
 // Set the current color and alpha values for each visual.
@@ -60,8 +62,8 @@ void KD45Display::updateColorAndAlpha()
   float alpha = alpha_property_->getFloat();
   Ogre::ColourValue color = color_property_->getOgreColor();
 
-    visual_left_->setColor( color.r, color.g, color.b, alpha );
-    visual_right_->setColor( color.r, color.g, color.b, alpha );
+    right_arrow_->setColor( color.r, color.g, color.b, alpha );
+    left_arrow_->setColor( color.r, color.g, color.b, alpha );
 }
 
 // This is our callback to handle an incoming message.
@@ -69,17 +71,25 @@ void KD45Display::processMessage( const tactile_msgs::TactileState::ConstPtr& ms
 {
     for (auto& c: msg->sensors) {
 
-        std::shared_ptr<KD45Visual> v = nullptr;
+        std::shared_ptr<rviz::Arrow> ar = nullptr;
+        Ogre::SceneNode* sn = nullptr;
         std::string sensor_frame = "";
         if (c.name == "left_gripper_tactile") {
-            std::cout << "left" << std::endl;
-            v = visual_left_;
+            ar = left_arrow_;
+            sn = left_frame_;
             sensor_frame = "kd45_left_finger_link";
-        } else {
-            v = visual_right_;
-            std::cout << "right" << std::endl;
+        } else if (c.name == "right_gripper_tactile") {
+            ar = right_arrow_;
+            sn = right_frame_;
             sensor_frame = "kd45_right_finger_link";
+        } else {
+            std::cout << "ERROR unknown sensor name " << c.name << std::endl;
         }
+
+        float length = c.values[0];
+        Ogre::Vector3 scale( length, length, length );
+        ar->setScale( scale );
+
 
         Ogre::Quaternion orientation;
         Ogre::Vector3 position;
@@ -87,23 +97,16 @@ void KD45Display::processMessage( const tactile_msgs::TactileState::ConstPtr& ms
                                                        msg->header.stamp,
                                                        position, orientation)) {
             ROS_DEBUG("Error transforming from frame '%s' to frame '%s'",
-                      msg->header.frame_id.c_str(), qPrintable(fixed_frame_));
-            // std::cout << "Error transforming from frame " << sensor_frame << " to frame " << qPrintable(fixed_frame_) << std::endl;
-            return;
+                      sensor_frame.c_str(), qPrintable(fixed_frame_));
+//            std::cout << "Error transforming from frame " << sensor_frame <<" to frame " << qPrintable(fixed_frame_) << std::endl;
+            continue;
         }
-        std::cout << position << " | " << orientation <<std::endl;
 
-        v.reset(new KD45Visual(context_->getSceneManager(), scene_node_));
-        std::cout << v << std::endl;
+        sn->setOrientation(orientation);
+        sn->setPosition(position);
+       updateColorAndAlpha();
 
-        // Now set or update the contents of the chosen visual.
-        v->setMessage(msg);
-        v->setFramePosition(position);
-        v->setFrameOrientation(orientation);
 
-        float alpha = alpha_property_->getFloat();
-        Ogre::ColourValue color = color_property_->getOgreColor();
-        v->setColor(color.r, color.g, color.b, alpha);
     }
 }
 

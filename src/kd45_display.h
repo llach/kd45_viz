@@ -6,6 +6,7 @@
 
 #include <rviz/message_filter_display.h>
 #include <tactile_msgs/TactileState.h>
+#include <rviz/ogre_helpers/arrow.h>
 #endif
 
 namespace Ogre
@@ -54,8 +55,11 @@ private Q_SLOTS:
   // Function to handle an incoming ROS message.
 private:
   void processMessage( const tactile_msgs::TactileState::ConstPtr& msg );
-    std::shared_ptr<KD45Visual> visual_left_;
-    std::shared_ptr<KD45Visual> visual_right_;
+    Ogre::SceneNode* right_frame_;
+    Ogre::SceneNode* left_frame_;
+
+    std::shared_ptr<rviz::Arrow> right_arrow_;
+    std::shared_ptr<rviz::Arrow> left_arrow_;
 
   // User-editable property variables.
   rviz::ColorProperty* color_property_;
