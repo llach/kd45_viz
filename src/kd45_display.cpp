@@ -83,7 +83,7 @@ void KD45Display::processMessage( const tactile_msgs::TactileState::ConstPtr& ms
             sn = right_frame_;
             sensor_frame = "kd45_right_finger_link";
         } else {
-            std::cout << "ERROR unknown sensor name " << c.name << std::endl;
+            ROS_ERROR_STREAM("ERROR unknown sensor name: " << c.name);
         }
 
         float length = c.values[0];
