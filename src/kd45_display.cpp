@@ -23,6 +23,12 @@ KD45Display::KD45Display()
   alpha_property_ = new rviz::FloatProperty( "Alpha", 1.0,
                                              "0 is fully transparent, 1.0 is fully opaque.",
                                              this, SLOT( updateColorAndAlpha() ));
+
+    arrow_scale_property_ = new rviz::FloatProperty( "ArrowScale", 0.2,
+                                               "Additional force arrow scaling factor.",
+                                               this, SLOT( updateArrowScale() ));
+
+    arrow_scale_ = 0.2;
 }
 
 // After the top-level rviz::Display::initialize() does its own setup,
@@ -43,6 +49,9 @@ void KD45Display::onInitialize()
 
     right_arrow_.reset(new rviz::Arrow( scene_manager_, right_frame_ ));
     left_arrow_.reset(new rviz::Arrow( scene_manager_, left_frame_ ));
+
+    right_arrow_->setDirection({-1, 0, 0});
+    left_arrow_->setDirection({1, 0, 0});
     updateColorAndAlpha();
 }
 
@@ -66,6 +75,12 @@ void KD45Display::updateColorAndAlpha()
     left_arrow_->setColor( color.r, color.g, color.b, alpha );
 }
 
+void KD45Display::updateArrowScale()
+{
+    arrow_scale_ = arrow_scale_property_->getFloat();
+}
+
+
 // This is our callback to handle an incoming message.
 void KD45Display::processMessage( const tactile_msgs::TactileState::ConstPtr& msg )
 {
@@ -88,8 +103,7 @@ void KD45Display::processMessage( const tactile_msgs::TactileState::ConstPtr& ms
 
         float length = c.values[0];
         Ogre::Vector3 scale( length, length, length );
-        ar->setScale( scale );
-
+        ar->setScale( arrow_scale_*scale );
 
         Ogre::Quaternion orientation;
         Ogre::Vector3 position;

@@ -51,6 +51,7 @@ protected:
   // These Qt slots get connected to signals indicating changes in the user-editable properties.
 private Q_SLOTS:
   void updateColorAndAlpha();
+  void updateArrowScale();
 
   // Function to handle an incoming ROS message.
 private:
@@ -61,9 +62,12 @@ private:
     std::shared_ptr<rviz::Arrow> right_arrow_;
     std::shared_ptr<rviz::Arrow> left_arrow_;
 
+    float arrow_scale_;
+
   // User-editable property variables.
   rviz::ColorProperty* color_property_;
   rviz::FloatProperty* alpha_property_;
+    rviz::FloatProperty* arrow_scale_property_;
 };
 
 }
