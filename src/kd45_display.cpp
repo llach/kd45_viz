@@ -52,6 +52,8 @@ void KD45Display::onInitialize()
 
     right_arrow_->setDirection({-1, 0, 0});
     left_arrow_->setDirection({1, 0, 0});
+    left_arrow_->setScale({0, 0, 0});
+    right_arrow_->setScale({0, 0, 0});
     updateColorAndAlpha();
 }
 
